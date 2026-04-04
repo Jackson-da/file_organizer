@@ -1,0 +1,43 @@
+name: Python CI  # 工作流名称
+
+on:             # 触发条件：当代码被推送到 main 分支，或向 main 分支发起 pull_request 时
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+
+jobs:
+  build:        # 作业的唯一标识符
+    runs-on: ubuntu-latest      # 使用 GitHub 提供的免费 Ubuntu 环境
+    strategy:                   # 策略：可以在不同 Python 版本下测试
+      matrix:
+        python-version: ["3.9", "3.10", "3.11"]   # 矩阵策略，将在多个Python版本上并行测试
+
+    steps:                      # 作业步骤
+    # 1. 拉取代码
+    - name: Checkout repository
+      uses: actions/checkout@v4
+
+    # 2. 设置 Python 环境
+    - name: Set up Python ${{ matrix.python-version }}
+      uses: actions/setup-python@v5
+      with:
+        python-version: ${{ matrix.python-version }}
+
+    # 3. 安装依赖
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
+
+    # 4. 代码格式检查（使用 black，可选）
+    - name: Lint with black
+      run: |
+        pip install black
+        black --check .
+
+    # 5. 运行单元测试
+    - name: Test with pytest
+      run: |
+        pip install pytest
+        pytest tests/
