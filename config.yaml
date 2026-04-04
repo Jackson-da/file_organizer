@@ -1,0 +1,147 @@
+# 文件整理工具配置文件（项目根目录）
+# 分类规则：编辑 rules 后重新运行 Streamlit 即可生效
+# 也可设置环境变量 FILE_ORGANIZER_CONFIG 指向其它 YAML 文件
+
+rules:
+  images:
+    - .jpg
+    - .jpeg
+    - .png
+    - .gif
+    - .bmp
+    - .svg
+    - .webp
+    - .ico
+    - .tiff
+    - .tif
+    - .heic
+    - .raw
+    - .psd
+
+  documents:
+    - .pdf
+    - .doc
+    - .docx
+    - .txt
+    - .rtf
+    - .odt
+    - .xls
+    - .xlsx
+    - .csv
+    - .ppt
+    - .pptx
+    - .md
+
+  videos:
+    - .mp4
+    - .avi
+    - .mkv
+    - .mov
+    - .wmv
+    - .flv
+    - .webm
+    - .m4v
+    - .mpg
+    - .mpeg
+    - .3gp
+
+  audio:
+    - .mp3
+    - .wav
+    - .flac
+    - .aac
+    - .ogg
+    - .wma
+    - .m4a
+    - .opus
+    - .ape
+    - .alac
+
+  archives:
+    - .zip
+    - .rar
+    - .7z
+    - .tar
+    - .gz
+    - .bz2
+    - .xz
+    - .iso
+    - .dmg
+
+  code:
+    - .py
+    - .js
+    - .ts
+    - .java
+    - .c
+    - .cpp
+    - .h
+    - .cs
+    - .go
+    - .rs
+    - .rb
+    - .php
+    - .swift
+    - .kt
+    - .scala
+    - .r
+    - .m
+    - .sh
+    - .bat
+    - .html
+    - .css
+    - .scss
+    - .sass
+    - .less
+    - .json
+    - .xml
+    - .yaml
+    - .yml
+    - .toml
+    - .sql
+    - .graphql
+    - .vue
+    - .jsx
+    - .tsx
+
+  executables:
+    - .exe
+    - .msi
+    - .app
+    - .dmg
+    - .deb
+    - .rpm
+    - .apk
+    - .jar
+    - .dll
+    - .so
+
+  fonts:
+    - .ttf
+    - .otf
+    - .woff
+    - .woff2
+    - .eot
+
+  3d_models:
+    - .obj
+    - .fbx
+    - .stl
+    - .3ds
+    - .blend
+    - .dae
+    - .gltf
+    - .glb
+
+  design:
+    - .psd
+    - .ai
+    - .eps
+    - .sketch
+    - .fig
+    - .xd
+
+settings:
+  overwrite_existing: false
+  include_hidden: false
+  log_level: INFO

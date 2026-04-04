@@ -1,0 +1,141 @@
+# 内置默认分类规则（当项目根目录 config.yaml 不存在或 rules 无效时使用）
+# 修改分类请优先编辑项目根目录的 config.yaml
+
+rules:
+  images:
+    - .jpg
+    - .jpeg
+    - .png
+    - .gif
+    - .bmp
+    - .svg
+    - .webp
+    - .ico
+    - .tiff
+    - .tif
+    - .heic
+    - .raw
+    - .psd
+
+  documents:
+    - .pdf
+    - .doc
+    - .docx
+    - .txt
+    - .rtf
+    - .odt
+    - .xls
+    - .xlsx
+    - .csv
+    - .ppt
+    - .pptx
+    - .md
+
+  videos:
+    - .mp4
+    - .avi
+    - .mkv
+    - .mov
+    - .wmv
+    - .flv
+    - .webm
+    - .m4v
+    - .mpg
+    - .mpeg
+    - .3gp
+
+  audio:
+    - .mp3
+    - .wav
+    - .flac
+    - .aac
+    - .ogg
+    - .wma
+    - .m4a
+    - .opus
+    - .ape
+    - .alac
+
+  archives:
+    - .zip
+    - .rar
+    - .7z
+    - .tar
+    - .gz
+    - .bz2
+    - .xz
+    - .iso
+    - .dmg
+
+  code:
+    - .py
+    - .js
+    - .ts
+    - .java
+    - .c
+    - .cpp
+    - .h
+    - .cs
+    - .go
+    - .rs
+    - .rb
+    - .php
+    - .swift
+    - .kt
+    - .scala
+    - .r
+    - .m
+    - .sh
+    - .bat
+    - .html
+    - .css
+    - .scss
+    - .sass
+    - .less
+    - .json
+    - .xml
+    - .yaml
+    - .yml
+    - .toml
+    - .sql
+    - .graphql
+    - .vue
+    - .jsx
+    - .tsx
+
+  executables:
+    - .exe
+    - .msi
+    - .app
+    - .dmg
+    - .deb
+    - .rpm
+    - .apk
+    - .jar
+    - .dll
+    - .so
+
+  fonts:
+    - .ttf
+    - .otf
+    - .woff
+    - .woff2
+    - .eot
+
+  3d_models:
+    - .obj
+    - .fbx
+    - .stl
+    - .3ds
+    - .blend
+    - .dae
+    - .gltf
+    - .glb
+
+  design:
+    - .psd
+    - .ai
+    - .eps
+    - .sketch
+    - .fig
+    - .xd
