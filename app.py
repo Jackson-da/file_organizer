@@ -108,12 +108,31 @@ def get_common_paths():
     return common
 
 
+def select_folder_with_dialog() -> Optional[str]:
+    """
+    使用 tkinter 系统文件对话框选择文件夹。
+    注意：仅在本地运行时有效，远程部署时不可用。
+    """
+    try:
+        import tkinter as tk
+        from tkinter import filedialog
+        root = tk.Tk()
+        root.withdraw()
+        root.attributes('-topmost', True)
+        folder = filedialog.askdirectory(title="选择要整理的文件夹")
+        root.destroy()
+        return folder if folder else None
+    except Exception:
+        return None
+
+
 def render_folder_input() -> Optional[str]:
     """渲染文件夹输入区域"""
     common_paths = get_common_paths()
 
     st.subheader("📂 选择文件夹")
 
+    # 快捷路径按钮 + 文件选择器
     cols = st.columns(len(common_paths) + 1)
     selected_common = None
 
@@ -127,8 +146,21 @@ def render_folder_input() -> Optional[str]:
                 ):
                     selected_common = path
 
+    # 文件选择器按钮
+    with cols[len(common_paths)]:
+        if st.button(
+            "📂 浏览...",
+            use_container_width=True,
+            key="btn_browse",
+            help="点击打开系统文件管理器选择文件夹（仅本地运行有效）",
+        ):
+            folder = select_folder_with_dialog()
+            if folder:
+                return folder
+
+    # 自定义路径输入
     folder_path = st.text_input(
-        "📝 自定义路径",
+        "📝 或输入自定义路径",
         placeholder="输入文件夹完整路径，如 C:\\Users\\YourName\\Downloads",
         help="输入要整理的文件所在的文件夹路径",
     )
