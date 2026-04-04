@@ -116,13 +116,15 @@ def select_folder_with_dialog() -> Optional[str]:
     try:
         import tkinter as tk
         from tkinter import filedialog
+
         root = tk.Tk()
         root.withdraw()
-        root.attributes('-topmost', True)
+        root.attributes("-topmost", True)
         folder = filedialog.askdirectory(title="选择要整理的文件夹")
         root.destroy()
         return folder if folder else None
     except Exception:
+        logger.warning("打开文件夹选择器失败，请检查 tkinter 是否可用")
         return None
 
 
@@ -161,7 +163,7 @@ def render_folder_input() -> Optional[str]:
     # 自定义路径输入
     folder_path = st.text_input(
         "📝 或输入自定义路径",
-        placeholder="输入文件夹完整路径，如 C:\\Users\\YourName\\Downloads",
+        placeholder=r"输入文件夹完整路径，如 C:\Users\YourName\Downloads",
         help="输入要整理的文件所在的文件夹路径",
     )
 
@@ -477,7 +479,7 @@ def main():
 
     folder_path = render_folder_input()
 
-    if folder_path and os.path.exists(folder_path):
+    if folder_path and os.path.exists(folder_path) and os.path.isdir(folder_path):
         render_preview(folder_path)
 
     render_actions()

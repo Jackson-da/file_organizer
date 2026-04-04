@@ -187,11 +187,11 @@ def copy_file(
             extension = source.suffix
             counter = 1
             while target_file.exists():
+                if counter > 1000:
+                    return False, f"无法为文件找到可用名称（已尝试 {counter} 次）: {source.name}"
                 new_name = f"{base_name}_copy_{counter}{extension}"
                 target_file = target_dir / new_name
                 counter += 1
-                if counter > 1_000_000:
-                    return False, f"无法为文件找到可用名称: {source.name}"
 
         if root is not None:
             try:
@@ -311,6 +311,10 @@ def validate_folder_path(
     Args:
         folder_path: 文件夹路径
         require_write: 为 True 时额外要求对目录有写权限（整理前使用）
+
+    Note:
+        Windows 上权限检查可能受 UAC 影响，以管理员权限运行时
+        可能无法准确检测普通用户权限。
     """
     path = Path(folder_path)
 

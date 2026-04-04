@@ -219,7 +219,11 @@ def preview_organization(
 
     for file_path in analysis.all_files:
         rel = _relative_display_path(file_path, root_r)
-        if file_path.is_symlink():
+        try:
+            is_link = file_path.is_symlink()
+        except OSError:
+            is_link = False
+        if is_link:
             rows.append(
                 {
                     "文件名": file_path.name,
@@ -230,7 +234,7 @@ def preview_organization(
             continue
         ext = get_file_extension(file_path)
         category = ext_index.get(ext)
-        if category is not None and validate_category_name(category):
+        if validate_category_name(category):
             target = category
         else:
             target = "—"
