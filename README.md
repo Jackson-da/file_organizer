@@ -1,9 +1,10 @@
 # 📁 文件整理工具
 
-[![Python](https://img.shields.io/badge/Python-3.8+-blue.svg)](https://www.python.org/)
-[![Streamlit](https://img.shields.io/badge/Streamlit-1.0+-red.svg)](https://streamlit.io/)
+[![Python](https://img.shields.io/badge/Python-3.9+-blue.svg)](https://www.python.org/)
+[![Streamlit](https://img.shields.io/badge/Streamlit-1.28+-red.svg)](https://streamlit.io/)
 [![License](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
 [![Tests](https://img.shields.io/badge/Tests-125%20passed-brightgreen)](tests/)
+[![CI](https://img.shields.io/badge/CI-GitHub%20Actions-brightgreen)](.github/workflows/ci.yml)
 
 在本地按**文件扩展名**把指定文件夹**根目录下的文件**移动到分类子文件夹（如 `images`、`documents`）。界面使用 **Streamlit**，规则从 **YAML** 读取。
 
@@ -24,6 +25,10 @@
 ---
 
 ## 🚀 快速开始
+
+### 环境要求
+
+- Python 3.9+
 
 ### 安装依赖
 
@@ -101,22 +106,26 @@ rules:
 
 ```
 文件分类/
-├── app.py                      # Streamlit Web 界面
-├── config.yaml                 # 用户自定义规则配置
-├── requirements.txt            # 依赖列表
-├── README.md                   # 本文件
+├── .github/
+│   └── workflows/
+│       └── ci.yml              # GitHub Actions CI 配置
+├── app.py                       # Streamlit Web 界面
+├── config.yaml                  # 用户自定义规则配置
+├── requirements.txt             # 依赖列表
+├── pyproject.toml               # 工具配置 (Black, isort, mypy, pytest)
+├── README.md                    # 本文件
 ├── organizer/
-│   ├── __init__.py            # 包导出
-│   ├── core.py                # 核心逻辑：扫描、预览、分类
-│   ├── rules.py               # 规则加载、缓存、校验
-│   ├── utils.py               # 文件操作工具函数
-│   └── default_rules.yaml     # 内置后备规则
+│   ├── __init__.py           # 包导出
+│   ├── core.py               # 核心逻辑：扫描、预览、分类
+│   ├── rules.py              # 规则加载、缓存、校验
+│   ├── utils.py              # 文件操作工具函数
+│   └── default_rules.yaml    # 内置后备规则
 └── tests/
-    ├── conftest.py             # pytest fixtures
-    ├── test_app.py            # UI 层测试
-    ├── test_core.py            # 核心功能测试
-    ├── test_rules.py           # 规则系统测试
-    └── test_utils.py           # 工具函数测试
+    ├── conftest.py            # pytest fixtures
+    ├── test_app.py           # UI 层测试
+    ├── test_core.py          # 核心功能测试
+    ├── test_rules.py         # 规则系统测试
+    └── test_utils.py         # 工具函数测试
 ```
 
 ---
@@ -136,7 +145,39 @@ pytest tests/ --cov=organizer --cov-report=html
 
 ---
 
-## 🔧 API 编程使用
+## 🔧 开发工具
+
+本项目使用以下开发工具维护代码质量：
+
+```bash
+# 安装开发依赖
+pip install black isort flake8 mypy
+
+# 代码格式化
+black .
+
+# 检查导入顺序
+isort --check-only .
+
+# 代码风格检查
+flake8 .
+
+# 类型检查
+mypy organizer app.py
+```
+
+### 持续集成 (CI)
+
+项目使用 GitHub Actions 自动运行：
+- Black 代码格式检查
+- isort 导入顺序检查
+- flake8 代码检查
+- pytest 测试（支持 Python 3.9-3.12）
+- mypy 类型检查
+
+---
+
+## 🔌 API 编程使用
 
 ```python
 from organizer import (
@@ -175,7 +216,7 @@ print(f"将移动 {result.moved_files} 个文件")
 
 1. Fork 本仓库
 2. 创建功能分支：`git checkout -b feature/新功能`
-3. 编写测试并确保通过：`pytest tests/`
+3. 确保代码通过所有检查：`pytest tests/`、`black .`、`isort --check .`
 4. 提交更改：`git commit -m "feat: 添加新功能"`
 5. 推送分支：`git push origin feature/新功能`
 6. 创建 Pull Request

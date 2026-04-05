@@ -1,0 +1,84 @@
+name: CI
+
+on:
+  push:
+    branches: [main, develop, 'feature/**']
+  pull_request:
+    branches: [main, develop]
+
+jobs:
+  lint-and-test:
+    runs-on: ubuntu-latest
+
+    strategy:
+      matrix:
+        python-version: ['3.9', '3.10', '3.11', '3.12']
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+          cache: 'pip'
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+          pip install black isort flake8
+
+      - name: Check code format with Black
+        run: |
+          black --check --diff .
+        continue-on-error: true
+
+      - name: Check import order with isort
+        run: |
+          isort --check-only --diff .
+        continue-on-error: true
+
+      - name: Run flake8 linter
+        run: |
+          flake8 . --max-line-length=100 --ignore=E501,W503,E203 --exclude=htmlcov,__pycache__,.git,.venv
+        continue-on-error: true
+
+      - name: Run pytest with coverage
+        run: |
+          pytest tests/ -v --cov=organizer --cov-report=xml --cov-report=html
+        env:
+          PYTHONPATH: .
+
+      - name: Upload coverage to Codecov
+        if: matrix.python-version == '3.12'
+        uses: codecov/codecov-action@v4
+        with:
+          file: ./coverage.xml
+          fail_ci_if_error: false
+        env:
+          CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
+
+  type-check:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+          pip install mypy types-python-dateutil
+
+      - name: Run mypy type checker
+        run: |
+          mypy organizer app.py --ignore-missing-imports --no-error-summary
+        continue-on-error: true
