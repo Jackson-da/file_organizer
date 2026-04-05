@@ -7,8 +7,9 @@ from __future__ import annotations
 import logging
 import os
 import re
+import threading
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any, Dict, List, Optional, Tuple, Union
 
 import yaml
 
@@ -52,9 +53,10 @@ _effective_rules: Optional[Dict[str, List[str]]] = None
 _load_identity: Optional[Tuple[Any, ...]] = None
 _DEFAULT_RULES_INDEX: Optional[Dict[str, str]] = None
 _LAST_RULES_OBJECT_ID: Optional[int] = None
+_rules_lock = threading.Lock()
 
 
-def resolve_config_path(explicit: Optional[os.PathLike[str] | str] = None) -> Path:
+def resolve_config_path(explicit: Optional[Union[str, os.PathLike]] = None) -> Path:
     """
     解析配置文件路径：
     1. 参数 explicit
@@ -130,7 +132,7 @@ def reload_rules() -> None:
 
 
 def get_effective_rules(
-    config_path: Optional[os.PathLike[str] | str] = None,
+    config_path: Optional[Union[str, os.PathLike]] = None,
     *,
     force_reload: bool = False,
 ) -> Dict[str, List[str]]:
@@ -138,6 +140,8 @@ def get_effective_rules(
     返回当前生效的分类规则（字典不可变请视为只读；修改请改 YAML 后 reload_rules）。
 
     优先加载项目 config.yaml；不存在或 rules 无效时使用包内 default_rules.yaml。
+
+    线程安全：使用锁保护全局缓存的读写操作。
     """
     global _effective_rules, _load_identity
 
@@ -152,6 +156,8 @@ def get_effective_rules(
         return rules
 
     ident = _current_load_identity()
+
+    # 先检查缓存（快速路径，无需加锁）
     if (
         not force_reload
         and _effective_rules is not None
@@ -159,22 +165,32 @@ def get_effective_rules(
     ):
         return _effective_rules
 
-    user = resolve_config_path()
-    rules: Optional[Dict[str, List[str]]] = None
-    if user.is_file():
-        rules = _try_load_rules_from_file(user)
+    # 缓存未命中或需要重载，加锁访问
+    with _rules_lock:
+        # 双检查（其他线程可能已更新）
+        if (
+            not force_reload
+            and _effective_rules is not None
+            and ident == _load_identity
+        ):
+            return _effective_rules
 
-    if rules is None:
-        builtin = _PACKAGE_DIR / "default_rules.yaml"
-        rules = _try_load_rules_from_file(builtin)
+        user = resolve_config_path()
+        rules: Optional[Dict[str, List[str]]] = None
+        if user.is_file():
+            rules = _try_load_rules_from_file(user)
+
         if rules is None:
-            logger.error("未找到有效规则（请检查 config.yaml 与 default_rules.yaml）")
-            rules = {}
+            builtin = _PACKAGE_DIR / "default_rules.yaml"
+            rules = _try_load_rules_from_file(builtin)
+            if rules is None:
+                logger.error("未找到有效规则（请检查 config.yaml 与 default_rules.yaml）")
+                rules = {}
 
-    _effective_rules = rules
-    _load_identity = ident
-    _invalidate_extension_index_cache()
-    return _effective_rules
+        _effective_rules = rules
+        _load_identity = ident
+        _invalidate_extension_index_cache()
+        return _effective_rules
 
 
 def _invalidate_extension_index_cache() -> None:
@@ -232,11 +248,18 @@ def build_extension_index(rules: Dict[str, List[str]]) -> Dict[str, str]:
 
 
 def get_default_extension_index() -> Dict[str, str]:
-    """基于当前生效规则的扩展名索引（带缓存）。"""
+    """基于当前生效规则的扩展名索引（带缓存，线程安全）。"""
     global _DEFAULT_RULES_INDEX, _LAST_RULES_OBJECT_ID
     rules = get_effective_rules()
     rid = id(rules)
-    if _DEFAULT_RULES_INDEX is None or _LAST_RULES_OBJECT_ID != rid:
+    # 缓存命中检查（无需加锁，只读操作）
+    if _DEFAULT_RULES_INDEX is not None and _LAST_RULES_OBJECT_ID == rid:
+        return _DEFAULT_RULES_INDEX
+    # 缓存未命中，加锁更新
+    with _rules_lock:
+        # 双检查
+        if _DEFAULT_RULES_INDEX is not None and _LAST_RULES_OBJECT_ID == rid:
+            return _DEFAULT_RULES_INDEX
         _DEFAULT_RULES_INDEX = build_extension_index(rules)
         _LAST_RULES_OBJECT_ID = rid
     return _DEFAULT_RULES_INDEX
@@ -302,9 +325,10 @@ def merge_rules(
     custom_rules: Dict[str, List[str]],
 ) -> Dict[str, List[str]]:
     """
-    合并自定义规则到基础规则中。
+    合并自定义规则到基础规则中（深拷贝，不修改原始数据）。
     """
-    merged = dict(base_rules)
+    # 深拷贝：每个分类的扩展名列表也创建新列表
+    merged = {k: list(v) for k, v in base_rules.items()}
 
     for category, extensions in custom_rules.items():
         if not validate_category_name(category):

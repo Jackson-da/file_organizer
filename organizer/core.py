@@ -193,7 +193,7 @@ def preview_organization(
     生成整理预览表；列含相对路径与目标分类文件夹名。
     可传入已缓存的 analysis 避免重复扫描；超大目录按 PREVIEW_BUILD_LIMIT 截断。
     """
-    columns = ["文件名", "相对路径", "目标文件夹"]
+    columns = _PREVIEW_COLUMNS
     meta: Dict[str, Any] = {
         "total_rows": 0,
         "dataframe_rows": 0,

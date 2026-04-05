@@ -69,21 +69,18 @@ st.set_page_config(
 
 
 def init_session_state():
-    """初始化会话状态"""
-    if "last_result" not in st.session_state:
-        st.session_state.last_result = None
-    if "current_folder" not in st.session_state:
-        st.session_state.current_folder = None
-    if "scan_results" not in st.session_state:
-        st.session_state.scan_results = None
-    if "preview_df" not in st.session_state:
-        st.session_state.preview_df = None
-    if "preview_source_folder" not in st.session_state:
-        st.session_state.preview_source_folder = None
-    if "preview_meta" not in st.session_state:
-        st.session_state.preview_meta = None
-    if "preview_generation" not in st.session_state:
-        st.session_state.preview_generation = 0
+    """初始化会话状态（使用 setdefault 一次性设置默认值）"""
+    defaults = {
+        "last_result": None,
+        "current_folder": None,
+        "scan_results": None,
+        "preview_df": None,
+        "preview_source_folder": None,
+        "preview_meta": None,
+        "preview_generation": 0,
+    }
+    for key, value in defaults.items():
+        st.session_state.setdefault(key, value)
 
 
 def render_header():

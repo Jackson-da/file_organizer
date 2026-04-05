@@ -79,6 +79,40 @@ def ensure_dir_exists(dir_path: Path) -> bool:
         return False
 
 
+def _resolve_target_filename(
+    source: Path,
+    target_dir: Path,
+    overwrite: bool,
+    suffix_template: str = "_{}{}",
+) -> Tuple[Path, Optional[str]]:
+    """
+    解析目标文件路径，处理文件名冲突。
+
+    Args:
+        source: 源文件路径
+        target_dir: 目标目录路径
+        overwrite: 是否覆盖已存在的文件
+        suffix_template: 冲突时后缀格式，默认为 "_{}{}" (name_counter_ext)
+
+    Returns:
+        Tuple[目标路径, 错误信息或None]
+    """
+    target_file = target_dir / source.name
+
+    if target_file.exists() and not overwrite:
+        base_name = source.stem
+        extension = source.suffix
+        counter = 1
+        while target_file.exists():
+            if counter > _FILENAME_COLLISION_MAX:
+                return target_file, f"无法为文件找到可用名称（已尝试 {_FILENAME_COLLISION_MAX} 次）: {source.name}"
+            new_name = suffix_template.format(counter, extension)
+            target_file = target_dir / f"{base_name}{new_name}"
+            counter += 1
+
+    return target_file, None
+
+
 def safe_move_file(
     source: Path,
     target_dir: Path,
@@ -113,18 +147,10 @@ def safe_move_file(
         if root is not None and not is_path_under_root(target_dir, root):
             return False, "目标目录不在允许的根文件夹内"
 
-        target_file = target_dir / source.name
-
-        if target_file.exists() and not overwrite:
-            base_name = source.stem
-            extension = source.suffix
-            counter = 1
-            while target_file.exists():
-                new_name = f"{base_name}_{counter}{extension}"
-                target_file = target_dir / new_name
-                counter += 1
-                if counter > 1_000_000:
-                    return False, f"无法为文件找到可用名称: {source.name}"
+        # 使用公共函数处理文件名冲突
+        target_file, err = _resolve_target_filename(source, target_dir, overwrite)
+        if err:
+            return False, err
 
         if root is not None and not is_path_under_root(target_file.parent, root):
             return False, "目标路径不在允许的根文件夹内"
@@ -180,18 +206,12 @@ def copy_file(
         if root is not None and not is_path_under_root(target_dir, root):
             return False, "目标目录不在允许的根文件夹内"
 
-        target_file = target_dir / source.name
-
-        if target_file.exists() and not overwrite:
-            base_name = source.stem
-            extension = source.suffix
-            counter = 1
-            while target_file.exists():
-                if counter > 1000:
-                    return False, f"无法为文件找到可用名称（已尝试 {counter} 次）: {source.name}"
-                new_name = f"{base_name}_copy_{counter}{extension}"
-                target_file = target_dir / new_name
-                counter += 1
+        # 使用公共函数处理文件名冲突（复制使用 _copy_ 后缀）
+        target_file, err = _resolve_target_filename(
+            source, target_dir, overwrite, suffix_template="_copy_{}{}"
+        )
+        if err:
+            return False, err
 
         if root is not None:
             try:
@@ -226,14 +246,14 @@ def format_file_size(size_bytes: int) -> str:
     Returns:
         格式化后的大小字符串（如 "1.5 MB"）
     """
-    if size_bytes < 1024:
+    if size_bytes < _SIZE_KB:
         return f"{size_bytes} B"
-    elif size_bytes < 1024 ** 2:
-        return f"{size_bytes / 1024:.1f} KB"
-    elif size_bytes < 1024 ** 3:
-        return f"{size_bytes / (1024 ** 2):.1f} MB"
+    elif size_bytes < _SIZE_MB:
+        return f"{size_bytes / _SIZE_KB:.1f} KB"
+    elif size_bytes < _SIZE_GB:
+        return f"{size_bytes / _SIZE_MB:.1f} MB"
     else:
-        return f"{size_bytes / (1024 ** 3):.1f} GB"
+        return f"{size_bytes / _SIZE_GB:.1f} GB"
 
 
 def load_config(config_path: str) -> Tuple[Optional[dict], Optional[str]]:
