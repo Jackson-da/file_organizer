@@ -6,7 +6,6 @@ import logging
 import os
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Tuple
 
 import pandas as pd
 
@@ -49,8 +48,8 @@ class OrganizeResult:
     total_files: int = 0
     moved_files: int = 0
     skipped_files: int = 0
-    errors: List[str] = field(default_factory=list)
-    categories: Dict[str, int] = field(default_factory=dict)
+    errors: list[str] = field(default_factory=list)
+    categories: dict[str, int] = field(default_factory=dict)
 
 
 @dataclass
@@ -58,20 +57,20 @@ class FolderAnalysis:
     """单次遍历根目录后的分析结果（性能优化与安全统计）。"""
 
     root_resolved: Path
-    all_files: List[Path]
-    organizable_files: List[Path]
-    categorized_files: List[Path]
+    all_files: list[Path]
+    organizable_files: list[Path]
+    categorized_files: list[Path]
     total_size: int
-    file_types: Dict[str, int]
-    subdirs: List[str]
+    file_types: dict[str, int]
+    subdirs: list[str]
     stat_failed: int
     symlink_count: int
 
 
 def categorize_file(
     file_ext: str,
-    rules: Dict[str, List[str]],
-) -> Optional[str]:
+    rules: dict[str, list[str]],
+) -> str | None:
     """
     根据文件扩展名确定目标文件夹类别。
     """
@@ -81,8 +80,8 @@ def categorize_file(
 
 def analyze_folder(
     folder_path: str,
-    ext_index: Optional[Dict[str, str]] = None,
-) -> Optional[FolderAnalysis]:
+    ext_index: dict[str, str] | None = None,
+) -> FolderAnalysis | None:
     """
     单次扫描根目录：统计信息 + 可整理文件列表（不含符号链接文件）。
     """
@@ -94,11 +93,11 @@ def analyze_folder(
         ext_index = get_default_extension_index()
 
     root_resolved = folder.resolve()
-    all_files: List[Path] = []
-    organizable: List[Path] = []
-    categorized: List[Path] = []
-    file_types: Dict[str, int] = {}
-    subdirs: List[str] = []
+    all_files: list[Path] = []
+    organizable: list[Path] = []
+    categorized: list[Path] = []
+    file_types: dict[str, int] = {}
+    subdirs: list[str] = []
     total_size = 0
     stat_failed = 0
     symlink_count = 0
@@ -169,9 +168,9 @@ def analyze_folder(
 
 def scan_folder(
     folder_path: str,
-    rules: Optional[Dict[str, List[str]]] = None,
-    ext_index: Optional[Dict[str, str]] = None,
-) -> Tuple[List[Path], List[Path]]:
+    rules: dict[str, list[str]] | None = None,
+    ext_index: dict[str, str] | None = None,
+) -> tuple[list[Path], list[Path]]:
     """
     扫描文件夹，返回 (根下所有普通文件含链接, 将被归类的非链接文件)。
     """
@@ -188,16 +187,16 @@ def scan_folder(
 
 def preview_organization(
     folder_path: str,
-    rules: Optional[Dict[str, List[str]]] = None,
-    ext_index: Optional[Dict[str, str]] = None,
-    analysis: Optional[FolderAnalysis] = None,
-) -> Tuple[pd.DataFrame, Dict[str, Any]]:
+    rules: dict[str, list[str]] | None = None,
+    ext_index: dict[str, str] | None = None,
+    analysis: FolderAnalysis | None = None,
+) -> tuple[pd.DataFrame, dict[str, object]]:
     """
     生成整理预览表；列含相对路径与目标分类文件夹名。
     可传入已缓存的 analysis 避免重复扫描；超大目录按 PREVIEW_BUILD_LIMIT 截断。
     """
     columns = _PREVIEW_COLUMNS
-    meta: Dict[str, Any] = {
+    meta: dict[str, object] = {
         "total_rows": 0,
         "dataframe_rows": 0,
         "truncated": False,
@@ -218,7 +217,7 @@ def preview_organization(
         return pd.DataFrame(columns=columns), meta
 
     root_r = analysis.root_resolved
-    rows: List[Dict[str, str]] = []
+    rows: list[dict[str, str]] = []
 
     for file_path in analysis.all_files:
         rel = _relative_display_path(file_path, root_r)
@@ -260,7 +259,7 @@ def preview_organization(
 
 def organize_folder(
     folder_path: str,
-    rules: Optional[Dict[str, List[str]]] = None,
+    rules: dict[str, list[str]] | None = None,
     dry_run: bool = False,
 ) -> OrganizeResult:
     """
@@ -355,9 +354,9 @@ def organize_folder(
 
 def get_folder_stats(
     folder_path: str,
-    rules: Optional[Dict[str, List[str]]] = None,
-    ext_index: Optional[Dict[str, str]] = None,
-) -> Dict[str, Any]:
+    rules: dict[str, list[str]] | None = None,
+    ext_index: dict[str, str] | None = None,
+) -> dict[str, object]:
     """
     获取文件夹的统计信息（与 analyze_folder 单次扫描一致）。
     """

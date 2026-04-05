@@ -5,7 +5,6 @@ app.py - Streamlit 文件整理工具 Web 界面
 import logging
 import os
 from pathlib import Path
-from typing import Any, Dict, Optional
 
 import streamlit as st
 
@@ -30,7 +29,7 @@ def _paths_equal(a: str, b: str) -> bool:
     )
 
 
-def _folder_analysis_cache_key(folder_path: str) -> Optional[tuple]:
+def _folder_analysis_cache_key(folder_path: str) -> tuple[str, float] | None:
     try:
         p = Path(folder_path)
         if not p.is_dir():
@@ -45,9 +44,9 @@ def _folder_analysis_cache_key(folder_path: str) -> Optional[tuple]:
 
 def get_cached_folder_analysis(
     folder_path: str,
-    ext_index: Dict[str, str],
-    session_state: Any,
-) -> Optional[FolderAnalysis]:
+    ext_index: dict[str, str],
+    session_state: "st.session_state",  # type: ignore[name-defined]
+) -> FolderAnalysis | None:
     """按路径+mtime 缓存扫描结果，避免同页重复 iterdir。"""
     key = _folder_analysis_cache_key(folder_path)
     if key is None:
@@ -105,7 +104,7 @@ def get_common_paths():
     return common
 
 
-def select_folder_with_dialog() -> Optional[str]:
+def select_folder_with_dialog() -> str | None:
     """
     使用 tkinter 系统文件对话框选择文件夹。
     注意：仅在本地运行时有效，远程部署时不可用。
@@ -125,7 +124,7 @@ def select_folder_with_dialog() -> Optional[str]:
         return None
 
 
-def render_folder_input() -> Optional[str]:
+def render_folder_input() -> str | None:
     """渲染文件夹输入区域"""
     common_paths = get_common_paths()
 
