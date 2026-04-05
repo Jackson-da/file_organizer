@@ -6,7 +6,6 @@ import logging
 import os
 import shutil
 from pathlib import Path
-from typing import Dict, List, Optional, Tuple
 
 import yaml
 
@@ -48,7 +47,7 @@ def is_path_under_root(path: Path, root: Path) -> bool:
         return False
 
 
-def verify_target_category_dir(root: Path, category: str) -> Tuple[bool, str]:
+def verify_target_category_dir(root: Path, category: str) -> tuple[bool, str]:
     """
     校验分类子目录是否可安全使用：名称合法、非同名文件、解析后仍在根目录内。
     """
@@ -92,7 +91,7 @@ def _resolve_target_filename(
     target_dir: Path,
     overwrite: bool,
     suffix_template: str = "_{}{}",
-) -> Tuple[Path, Optional[str]]:
+) -> tuple[Path, str | None]:
     """
     解析目标文件路径，处理文件名冲突。
 
@@ -125,8 +124,8 @@ def safe_move_file(
     source: Path,
     target_dir: Path,
     overwrite: bool = False,
-    root: Optional[Path] = None,
-) -> Tuple[bool, Optional[str]]:
+    root: Path | None = None,
+) -> tuple[bool, str | None]:
     """
     安全地移动文件到目标目录。
 
@@ -137,7 +136,7 @@ def safe_move_file(
         root: 若给定，则源、目标均须解析后位于该根目录下
 
     Returns:
-        Tuple[bool, Optional[str]]: (是否成功, 错误信息或None)
+        tuple[bool, str | None]: (是否成功, 错误信息或None)
     """
     try:
         if root is not None:
@@ -193,8 +192,8 @@ def copy_file(
     source: Path,
     target_dir: Path,
     overwrite: bool = False,
-    root: Optional[Path] = None,
-) -> Tuple[bool, Optional[str]]:
+    root: Path | None = None,
+) -> tuple[bool, str | None]:
     """
     安全地复制文件到目标目录。
     """
@@ -264,7 +263,7 @@ def format_file_size(size_bytes: int) -> str:
         return f"{size_bytes / _SIZE_GB:.1f} GB"
 
 
-def load_config(config_path: str) -> Tuple[Optional[dict], Optional[str]]:
+def load_config(config_path: str) -> tuple[dict | None, str | None]:
     """
     从 YAML 文件加载配置。
 
@@ -332,7 +331,7 @@ def is_hidden_file(file_path: Path) -> bool:
 def validate_folder_path(
     folder_path: str,
     require_write: bool = False,
-) -> Tuple[bool, Optional[str]]:
+) -> tuple[bool, str | None]:
     """
     验证文件夹路径是否有效。
 

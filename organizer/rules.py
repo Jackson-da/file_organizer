@@ -2,14 +2,11 @@
 organizer/rules.py - 文件分类规则（从 config.yaml 加载，失败时使用包内 default_rules.yaml）
 """
 
-from __future__ import annotations
-
 import logging
 import os
 import re
 import threading
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Tuple, Union
 
 import yaml
 
@@ -49,14 +46,14 @@ _WIN_RESERVED_STEMS = frozenset(
     }
 )
 
-_effective_rules: Optional[Dict[str, List[str]]] = None
-_load_identity: Optional[Tuple[Any, ...]] = None
-_DEFAULT_RULES_INDEX: Optional[Dict[str, str]] = None
-_LAST_RULES_OBJECT_ID: Optional[int] = None
+_effective_rules: dict[str, list[str]] | None = None
+_load_identity: tuple[str, ...] | None = None
+_DEFAULT_RULES_INDEX: dict[str, str] | None = None
+_LAST_RULES_OBJECT_ID: int | None = None
 _rules_lock = threading.Lock()
 
 
-def resolve_config_path(explicit: Optional[Union[str, os.PathLike]] = None) -> Path:
+def resolve_config_path(explicit: str | os.PathLike | None = None) -> Path:
     """
     解析配置文件路径：
     1. 参数 explicit
@@ -72,7 +69,7 @@ def resolve_config_path(explicit: Optional[Union[str, os.PathLike]] = None) -> P
     return (project_root / "config.yaml").resolve()
 
 
-def _try_load_rules_from_file(path: Path) -> Optional[Dict[str, List[str]]]:
+def _try_load_rules_from_file(path: Path) -> dict[str, list[str]] | None:
     if not path.is_file():
         return None
     try:
@@ -97,7 +94,7 @@ def _try_load_rules_from_file(path: Path) -> Optional[Dict[str, List[str]]]:
         return None
 
 
-def _current_load_identity() -> Tuple[Any, ...]:
+def _current_load_identity() -> tuple[str, ...]:
     """用于判断是否需要重新加载（路径 + mtime）。"""
     user = resolve_config_path()
     if user.is_file():
@@ -132,10 +129,10 @@ def reload_rules() -> None:
 
 
 def get_effective_rules(
-    config_path: Optional[Union[str, os.PathLike]] = None,
+    config_path: str | os.PathLike | None = None,
     *,
     force_reload: bool = False,
-) -> Dict[str, List[str]]:
+) -> dict[str, list[str]]:
     """
     返回当前生效的分类规则（字典不可变请视为只读；修改请改 YAML 后 reload_rules）。
 
@@ -176,7 +173,7 @@ def get_effective_rules(
             return _effective_rules
 
         user = resolve_config_path()
-        rules: Optional[Dict[str, List[str]]] = None
+        rules: dict[str, list[str]] | None = None
         if user.is_file():
             rules = _try_load_rules_from_file(user)
 
@@ -199,7 +196,7 @@ def _invalidate_extension_index_cache() -> None:
     _LAST_RULES_OBJECT_ID = None
 
 
-def __getattr__(name: str) -> Any:
+def __getattr__(name: str) -> object:
     """兼容 `from organizer.rules import DEFAULT_RULES`。"""
     if name == "DEFAULT_RULES":
         return get_effective_rules()
@@ -229,11 +226,11 @@ def validate_category_name(name: str) -> bool:
     return True
 
 
-def build_extension_index(rules: Dict[str, List[str]]) -> Dict[str, str]:
+def build_extension_index(rules: dict[str, list[str]]) -> dict[str, str]:
     """
     将规则表预处理为「扩展名(小写, 带点) -> 分类名」映射。
     """
-    index: Dict[str, str] = {}
+    index: dict[str, str] = {}
     for category, extensions in rules.items():
         if not validate_category_name(category):
             continue
@@ -247,7 +244,7 @@ def build_extension_index(rules: Dict[str, List[str]]) -> Dict[str, str]:
     return index
 
 
-def get_default_extension_index() -> Dict[str, str]:
+def get_default_extension_index() -> dict[str, str]:
     """基于当前生效规则的扩展名索引（带缓存，线程安全）。"""
     global _DEFAULT_RULES_INDEX, _LAST_RULES_OBJECT_ID
     rules = get_effective_rules()
@@ -265,7 +262,7 @@ def get_default_extension_index() -> Dict[str, str]:
     return _DEFAULT_RULES_INDEX
 
 
-def get_all_extensions() -> List[str]:
+def get_all_extensions() -> list[str]:
     """获取当前规则中所有扩展名。"""
     extensions = set()
     for ext_list in get_effective_rules().values():
@@ -284,7 +281,7 @@ def get_category_for_extension(ext: str) -> str:
     return idx.get(ext, "others")
 
 
-def load_rules_from_dict(rules_dict: Dict[str, List[str]]) -> Dict[str, List[str]]:
+def load_rules_from_dict(rules_dict: dict[str, list[str]]) -> dict[str, list[str]]:
     """
     验证并规范化用户自定义规则。
 
@@ -294,7 +291,7 @@ def load_rules_from_dict(rules_dict: Dict[str, List[str]]) -> Dict[str, List[str
     if not isinstance(rules_dict, dict):
         raise ValueError("规则必须是字典类型")
 
-    normalized_rules: Dict[str, List[str]] = {}
+    normalized_rules: dict[str, list[str]] = {}
     for category, extensions in rules_dict.items():
         if not isinstance(category, str):
             raise ValueError(f"分类名称必须是字符串: {category}")
@@ -306,7 +303,7 @@ def load_rules_from_dict(rules_dict: Dict[str, List[str]]) -> Dict[str, List[str
         if not isinstance(extensions, (list, tuple)):
             raise ValueError(f"分类 '{category}' 的扩展名必须是列表")
 
-        normalized_exts: List[str] = []
+        normalized_exts: list[str] = []
         for ext in extensions:
             if not isinstance(ext, str):
                 raise ValueError(f"扩展名必须是字符串: {ext}")
@@ -321,9 +318,9 @@ def load_rules_from_dict(rules_dict: Dict[str, List[str]]) -> Dict[str, List[str
 
 
 def merge_rules(
-    base_rules: Dict[str, List[str]],
-    custom_rules: Dict[str, List[str]],
-) -> Dict[str, List[str]]:
+    base_rules: dict[str, list[str]],
+    custom_rules: dict[str, list[str]],
+) -> dict[str, list[str]]:
     """
     合并自定义规则到基础规则中（深拷贝，不修改原始数据）。
     """
