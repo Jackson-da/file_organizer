@@ -14,6 +14,14 @@ from .rules import validate_category_name
 
 logger = logging.getLogger(__name__)
 
+# 文件大小格式化常量
+_SIZE_KB = 1024
+_SIZE_MB = 1024 ** 2
+_SIZE_GB = 1024 ** 3
+
+# 文件名冲突重命名上限
+_FILENAME_COLLISION_MAX = 1000
+
 
 def get_file_extension(file_path: Path) -> str:
     """
