@@ -30,6 +30,9 @@ logger = logging.getLogger(__name__)
 # 预览表最多构建的行数（界面分页展示；超出则截断并提示）
 PREVIEW_BUILD_LIMIT = 100_000
 
+# 预览表列名常量（统一管理，便于国际化）
+_PREVIEW_COLUMNS = ["文件名", "相对路径", "目标文件夹"]
+
 
 def _relative_display_path(file_path: Path, root_resolved: Path) -> str:
     """用于界面展示：相对所选文件夹的路径，避免泄露完整绝对路径。"""
